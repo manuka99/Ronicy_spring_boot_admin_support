@@ -1,4 +1,5 @@
 package com.ronicy.admin;
+
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +14,10 @@ import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
 
 @RestController
-public class TokenController {	
+public class TokenController {
+	
+	@Autowired
+	ObjectMapper oMapper;
 
 	@GetMapping("/user/get_token")
 	public String validateIDToken(@RequestParam(value = "tokenID", required = false) String tokenID) {
@@ -34,15 +38,19 @@ public class TokenController {
 
 	private String getCustomClaimToken(String uid) {
 		CustomClaims customClaims = new CustomClaims();
-		customClaims.setAdmin(true);
-	
-		String customToken = null;
+
+		//manuka yasas
+		if (uid.equals("O9i9UFnGdJfmdI6cIqqLuvYbTpD3")) {
+			customClaims.setAdmin(true);
+			customClaims.setAdvertisement_manager(true);
+			customClaims.setOrder_manager(true);
+		}
 		
-		ObjectMapper oMapper = new ObjectMapper();
-		 Map<String, Object> map = oMapper.convertValue(customClaims, new TypeReference<Map<String, Object>>() {});
+		String customToken = null;
 
 		try {
-			customToken = FirebaseAuth.getInstance().createCustomToken(uid, map);
+			customToken = FirebaseAuth.getInstance().createCustomToken(uid, oMapper.convertValue(customClaims, new TypeReference<Map<String, Object>>() {
+			}));
 		} catch (FirebaseAuthException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -52,6 +60,5 @@ public class TokenController {
 
 		return customToken;
 	}
-
 
 }
