@@ -32,12 +32,13 @@ public class TokenController {
 	}
 
 	private String getCustomClaimToken(String uid) {
-		Map<String, Object> additionalClaims = new HashMap<String, Object>();
-		additionalClaims.put("premiumAccount", true);
+		CustomClaims customClaims = new CustomClaims();
+		customClaims.setAdmin(true);
+	
 		String customToken = null;
 
 		try {
-			customToken = FirebaseAuth.getInstance().createCustomToken(uid, additionalClaims);
+			customToken = FirebaseAuth.getInstance().createCustomToken(uid, (Map<String, Object>) customClaims);
 		} catch (FirebaseAuthException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -47,5 +48,6 @@ public class TokenController {
 
 		return customToken;
 	}
+
 
 }
