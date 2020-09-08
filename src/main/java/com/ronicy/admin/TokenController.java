@@ -41,7 +41,7 @@ public class TokenController {
 
 		//manuka yasas
 		if (uid.equals("O9i9UFnGdJfmdI6cIqqLuvYbTpD3")) {
-			customClaims.setAdvertisement_manager(true);
+			customClaims.setAdvertisement_manager(false);
 			customClaims.setOrder_manager(true);
 		}
 		
