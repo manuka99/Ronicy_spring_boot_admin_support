@@ -15,9 +15,11 @@ import com.google.firebase.auth.FirebaseToken;
 
 @RestController
 public class TokenController {
-	
+
 	@Autowired
 	ObjectMapper oMapper;
+	
+	private static final String CUSTOM_CLAIMS_UID_MANUKA = "O9i9UFnGdJfmdI6cIqqLuvYbTpD3";
 
 	@GetMapping("/user/get_token")
 	public String validateIDToken(@RequestParam(value = "tokenID", required = false) String tokenID) {
@@ -39,18 +41,22 @@ public class TokenController {
 	private String getCustomClaimToken(String uid) {
 		CustomClaims customClaims = new CustomClaims();
 
-		//manuka yasas
-		if (uid.equals("O9i9UFnGdJfmdI6cIqqLuvYbTpD3")) {
-			customClaims.setAdmin(true);
-			customClaims.setAdvertisement_manager(true);
+		if (uid.equals(CUSTOM_CLAIMS_UID_MANUKA)) {
+			/// customClaims.setAdmin(true);
+			// customClaims.setAdvertisement_manager(true);
 			customClaims.setOrder_manager(true);
 		}
-		
+
 		String customToken = null;
 
 		try {
-			customToken = FirebaseAuth.getInstance().createCustomToken(uid, oMapper.convertValue(customClaims, new TypeReference<Map<String, Object>>() {
-			}));
+			customToken = FirebaseAuth.getInstance().createCustomToken(uid,
+					oMapper.convertValue(customClaims, new TypeReference<Map<String, Object>>() {
+					}));
+
+			FirebaseAuth.getInstance().setCustomUserClaimsAsync(uid,
+					oMapper.convertValue(customClaims, new TypeReference<Map<String, Object>>() {
+					}));
 		} catch (FirebaseAuthException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -59,6 +65,11 @@ public class TokenController {
 		System.out.println(customToken);
 
 		return customToken;
+	}
+	
+	
+	public void setClaimsOnStartup() {
+		getCustomClaimToken(CUSTOM_CLAIMS_UID_MANUKA);
 	}
 
 }
