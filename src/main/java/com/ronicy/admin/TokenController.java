@@ -45,7 +45,7 @@ public class TokenController {
 		if (uid.equals(CUSTOM_CLAIMS_UID_MANUKA)) {
 			/// customClaims.setAdmin(true);
 			customClaims.setAdvertisement_manager(true);
-			customClaims.setOrder_manager(true);
+			//customClaims.setOrder_manager(true);
 		}
 		
 		String customToken = null;
