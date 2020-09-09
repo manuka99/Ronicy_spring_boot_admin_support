@@ -39,6 +39,7 @@ public class TokenController {
 	}
 
 	private String getCustomClaimToken(String uid) {
+		
 		CustomClaims customClaims = new CustomClaims();
 
 		if (uid.equals(CUSTOM_CLAIMS_UID_MANUKA)) {
@@ -46,7 +47,7 @@ public class TokenController {
 			// customClaims.setAdvertisement_manager(true);
 			customClaims.setOrder_manager(true);
 		}
-
+		
 		String customToken = null;
 
 		try {
@@ -63,7 +64,7 @@ public class TokenController {
 		}
 
 		System.out.println(customToken);
-
+	
 		return customToken;
 	}
 	
