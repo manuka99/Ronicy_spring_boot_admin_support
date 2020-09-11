@@ -116,8 +116,15 @@ public class TokenController {
 	}
 
 	@GetMapping("/update")
-	private void updateAllClaims() {
-		setCustomClaimToken(CUSTOM_CLAIMS_UID_MANUKA);
+	private void updateAllClaims(@RequestParam(value="uid", required = false) String uid) {
+		if(uid != null) {
+			setCustomClaimToken(uid);
+			forceLogout(uid);
+		}
+		else {
+			setCustomClaimToken(CUSTOM_CLAIMS_UID_MANUKA);
+			forceLogout(CUSTOM_CLAIMS_UID_MANUKA);
+		}
 	}
 
 }
