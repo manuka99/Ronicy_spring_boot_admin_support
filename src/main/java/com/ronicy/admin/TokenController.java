@@ -35,13 +35,21 @@ public class TokenController {
 			FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(tokenID);
 			uid = decodedToken.getUid();
 			if (uid != null) {
-				String customToken = getCustomClaimToken(uid);
-				return customToken;
+				//returnCustomClaimsAddedTokenToClient(uid);
+				setCustomClaimToken(uid);
 			}
 		} catch (FirebaseAuthException e) {
 			e.printStackTrace();
 		}
 
+		return null;
+	}
+
+	public String returnCustomClaimsAddedTokenToClient(String uid) {
+		if (uid != null) {
+			String customToken = getCustomClaimToken(uid);
+			return customToken;
+		}
 		return null;
 	}
 
