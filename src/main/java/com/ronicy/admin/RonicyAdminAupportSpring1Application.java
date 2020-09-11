@@ -27,7 +27,6 @@ public class RonicyAdminAupportSpring1Application {
 			System.out.println("json not found");
 			e.printStackTrace();
 		}
-		new TokenController().setClaimsOnStartup();
 	}
 
 }

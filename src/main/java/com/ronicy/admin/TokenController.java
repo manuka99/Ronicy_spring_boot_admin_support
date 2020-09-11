@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.v1.FirestoreClient;
 import com.google.firebase.auth.FirebaseAuth;
@@ -45,41 +46,47 @@ public class TokenController {
 	}
 
 	private String getCustomClaimToken(String uid) {
-
-		CustomClaims customClaims = new CustomClaims();
-
-		if (uid.equals(CUSTOM_CLAIMS_UID_MANUKA)) {
-			/// customClaims.setAdmin(true);
-			customClaims.setAdvertisement_manager(true);
-			// customClaims.setOrder_manager(true);
-		}
-
 		String customToken = null;
+		CustomClaims customClaims = getClaimsForUID(uid);
+		if (customClaims != null) {
+			try {
+				customToken = FirebaseAuth.getInstance().createCustomToken(uid,
+						oMapper.convertValue(customClaims, new TypeReference<Map<String, Object>>() {
+						}));
+			} catch (FirebaseAuthException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 
-		try {
-			customToken = FirebaseAuth.getInstance().createCustomToken(uid,
-					oMapper.convertValue(customClaims, new TypeReference<Map<String, Object>>() {
-					}));
-
-			FirebaseAuth.getInstance().setCustomUserClaimsAsync(uid,
-					oMapper.convertValue(customClaims, new TypeReference<Map<String, Object>>() {
-					}));
-		} catch (FirebaseAuthException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.out.println(customToken);
 		}
-
-		System.out.println(customToken);
-
 		return customToken;
 	}
 
-	public void setClaimsOnStartup() {
-		//refresh_token(CUSTOM_CLAIMS_UID_MANUKA);
+	private void setCustomClaimToken(String uid) {
+		CustomClaims customClaims = getClaimsForUID(uid);
+
+		if (customClaims != null) {
+			FirebaseAuth.getInstance().setCustomUserClaimsAsync(uid,
+					oMapper.convertValue(customClaims, new TypeReference<Map<String, Object>>() {
+					}));
+
+		}
+	}
+
+	private CustomClaims getClaimsForUID(String uid) {
+		CustomClaims customClaims = new CustomClaims();
+		if (uid.equals(CUSTOM_CLAIMS_UID_MANUKA)) {
+			/// customClaims.setAdmin(true);
+			customClaims.setAdvertisement_manager(true);
+			customClaims.setOrder_manager(true);
+			// customClaims.setUser_manager(true);
+		}
+		return customClaims;
 	}
 
 	@GetMapping("/refresh")
-	public void refresh_token(@RequestParam(value = "uid", required = false) String uid) {
+	public void revokeRefreshTokens(@RequestParam(value = "uid", required = false) String uid) {
 		try {
 			FirebaseAuth.getInstance().revokeRefreshTokens(uid);
 			UserRecord user = FirebaseAuth.getInstance().getUser(uid);
@@ -87,15 +94,29 @@ public class TokenController {
 			long revocationSecond = user.getTokensValidAfterTimestamp() / 1000;
 			System.out.println("Tokens revoked at: " + revocationSecond);
 
-		    DocumentReference refStore = com.google.firebase.cloud.FirestoreClient.getFirestore().collection("metadata").document(uid);
-		  
+			DocumentReference refStore = com.google.firebase.cloud.FirestoreClient.getFirestore().collection("metadata")
+					.document(uid);
+
 			Map<String, Object> userData = new HashMap<>();
 			userData.put("revokeTime", revocationSecond);
 			refStore.set(userData);
-             
 		} catch (FirebaseAuthException e) {
 			e.printStackTrace();
 		}
+	}
+
+	@GetMapping("/logout")
+	private void forceLogout(@RequestParam(value = "uid", required = false) String uid) {
+		DocumentReference refStore = com.google.firebase.cloud.FirestoreClient.getFirestore().collection("metadata")
+				.document(uid);
+		Map<String, Object> userData = new HashMap<>();
+		userData.put("revokeTime", 0);
+		refStore.set(userData);
+	}
+
+	@GetMapping("/update")
+	private void updateAllClaims() {
+		setCustomClaimToken(CUSTOM_CLAIMS_UID_MANUKA);
 	}
 
 }
