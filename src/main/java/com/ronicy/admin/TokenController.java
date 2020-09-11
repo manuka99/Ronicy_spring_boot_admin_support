@@ -68,7 +68,6 @@ public class TokenController {
 		return customToken;
 	}
 	
-	
 	public void setClaimsOnStartup() {
 		try {
 			FirebaseAuth.getInstance().revokeRefreshTokens(CUSTOM_CLAIMS_UID_MANUKA);
@@ -78,5 +77,15 @@ public class TokenController {
 			e.printStackTrace();
 		}
 	}
-
+	
+	@GetMapping("/refresh")
+	public void refresh_token(@RequestParam(value = "uid", required = false) String uid) {
+		try {
+			FirebaseAuth.getInstance().revokeRefreshTokens(uid);
+		} catch (FirebaseAuthException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
 }
