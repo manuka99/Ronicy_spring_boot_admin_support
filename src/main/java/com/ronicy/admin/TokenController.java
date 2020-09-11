@@ -37,6 +37,7 @@ public class TokenController {
 			if (uid != null) {
 				//returnCustomClaimsAddedTokenToClient(uid);
 				setCustomClaimToken(uid);
+				revokeRefreshTokens(uid);
 			}
 		} catch (FirebaseAuthException e) {
 			e.printStackTrace();
