@@ -8,8 +8,11 @@ public class CustomClaims{
 	private boolean chat_manager;
 	private boolean contact_manager;
 	private boolean order_manager;
+	
+	//new roles
 	private boolean user_manager;
 	private boolean guest_admin;
+	
 	
 	public CustomClaims() {
 		this.advertisement_manager = false;
