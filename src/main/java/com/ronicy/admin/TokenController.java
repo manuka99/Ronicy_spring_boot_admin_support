@@ -35,9 +35,9 @@ public class TokenController {
 			FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(tokenID);
 			uid = decodedToken.getUid();
 			if (uid != null) {
-				//returnCustomClaimsAddedTokenToClient(uid);
+				// returnCustomClaimsAddedTokenToClient(uid);
 				setCustomClaimToken(uid);
-				revokeRefreshTokens(uid);
+				extendTimeForUser(uid);
 			}
 		} catch (FirebaseAuthException e) {
 			e.printStackTrace();
@@ -89,7 +89,7 @@ public class TokenController {
 			/// customClaims.setAdmin(true);
 			customClaims.setAdvertisement_manager(true);
 			customClaims.setOrder_manager(true);
-			customClaims.setGuest_admin(true);
+			// customClaims.setGuest_admin(true);
 			// customClaims.setUser_manager(true);
 		}
 		return customClaims;
@@ -115,6 +115,16 @@ public class TokenController {
 		}
 	}
 
+	private void extendTimeForUser(String uid) {
+		DocumentReference refStore = com.google.firebase.cloud.FirestoreClient.getFirestore().collection("metadata")
+				.document(uid);
+
+		Map<String, Object> userData = new HashMap<>();
+		userData.put("revokeTime", 10000);
+		refStore.set(userData);
+
+	}
+
 	@GetMapping("/logout")
 	private void forceLogout(@RequestParam(value = "uid", required = false) String uid) {
 		DocumentReference refStore = com.google.firebase.cloud.FirestoreClient.getFirestore().collection("metadata")
@@ -125,12 +135,11 @@ public class TokenController {
 	}
 
 	@GetMapping("/update")
-	private void updateAllClaims(@RequestParam(value="uid", required = false) String uid) {
-		if(uid != null) {
+	private void updateAllClaims(@RequestParam(value = "uid", required = false) String uid) {
+		if (uid != null) {
 			setCustomClaimToken(uid);
 			forceLogout(uid);
-		}
-		else {
+		} else {
 			setCustomClaimToken(CUSTOM_CLAIMS_UID_MANUKA);
 			forceLogout(CUSTOM_CLAIMS_UID_MANUKA);
 		}
