@@ -43,7 +43,7 @@ public class TokenController {
 			e.printStackTrace();
 		}
 
-		return null;
+		return "";
 	}
 
 	public String returnCustomClaimsAddedTokenToClient(String uid) {
