@@ -70,7 +70,13 @@ public class TokenController {
 	
 	
 	public void setClaimsOnStartup() {
-		getCustomClaimToken(CUSTOM_CLAIMS_UID_MANUKA);
+		try {
+			FirebaseAuth.getInstance().revokeRefreshTokens(CUSTOM_CLAIMS_UID_MANUKA);
+			getCustomClaimToken(CUSTOM_CLAIMS_UID_MANUKA);
+		} catch (FirebaseAuthException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 }
