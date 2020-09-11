@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.cloud.firestore.DocumentReference;
+import com.google.cloud.firestore.v1.FirestoreClient;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
@@ -85,10 +87,12 @@ public class TokenController {
 			long revocationSecond = user.getTokensValidAfterTimestamp() / 1000;
 			System.out.println("Tokens revoked at: " + revocationSecond);
 
-			DatabaseReference ref = FirebaseDatabase.getInstance().getReference("metadata/" + uid);
+		    DocumentReference refStore = com.google.firebase.cloud.FirestoreClient.getFirestore().collection("metadata").document(uid);
+		  
 			Map<String, Object> userData = new HashMap<>();
 			userData.put("revokeTime", revocationSecond);
-			ref.setValueAsync(userData);
+			refStore.set(userData);
+             
 		} catch (FirebaseAuthException e) {
 			e.printStackTrace();
 		}
