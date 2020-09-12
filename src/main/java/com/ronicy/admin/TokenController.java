@@ -159,11 +159,23 @@ extendTimeForUser(uid);
 			// forceLogout(CUSTOM_CLAIMS_UID_MANUKA);
 		}
 	}
+	
+	
+	@GetMapping("/revoke_claims")
+	private void revokeAllClaims(@RequestParam(value = "uid", required = false) String uid) {
+		if (uid != null) {
+			revokeAllClaimsFromUsers(uid);
+			// forceLogout(uid);
+		} else {
+			revokeAllClaimsFromUsers(CUSTOM_CLAIMS_UID_MANUKA);
+			// forceLogout(CUSTOM_CLAIMS_UID_MANUKA);
+		}
+	}
 
 	private void revokeAllClaimsFromUsers(String uid) {
 		CustomClaims customClaims = new CustomClaims();
 
-		if (customClaims != null) {
+		if (uid != null) {
 			FirebaseAuth.getInstance().setCustomUserClaimsAsync(uid,
 					oMapper.convertValue(customClaims, new TypeReference<Map<String, Object>>() {
 					}));
