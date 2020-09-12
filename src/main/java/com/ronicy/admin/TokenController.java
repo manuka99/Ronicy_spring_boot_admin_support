@@ -77,11 +77,12 @@ public class TokenController {
 	private void setCustomClaimToken(String uid) {
 		CustomClaims customClaims = getClaimsForUID(uid);
 
-		if (customClaims != null) {
+		if (uid != null) {
 			FirebaseAuth.getInstance().setCustomUserClaimsAsync(uid,
 					oMapper.convertValue(customClaims, new TypeReference<Map<String, Object>>() {
 					}));
 
+extendTimeForUser(uid);
 		}
 	}
 
