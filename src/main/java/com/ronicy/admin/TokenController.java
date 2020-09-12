@@ -144,7 +144,7 @@ public class TokenController {
 			Map<String, Object> userData = new HashMap<>();
 			userData.put("revokeTime", 0);
 			refStore.set(userData);
-			revokeAllClaimsFromUsers(uid);
+			revokeAllClaimsFromUsers(userID);
 		}
 	}
 
