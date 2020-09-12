@@ -91,7 +91,7 @@ public class TokenController {
 			/// customClaims.setAdmin(true);
 			customClaims.setAdvertisement_manager(true);
 			customClaims.setOrder_manager(true);
-			customClaims.setGuest_admin(true);
+			//customClaims.setGuest_admin(true);
 			customClaims.setUser_manager(true);
 		}
 		return customClaims;
