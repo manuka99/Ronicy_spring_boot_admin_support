@@ -91,7 +91,7 @@ public class TokenController {
 			/// customClaims.setAdmin(true);
 			customClaims.setAdvertisement_manager(true);
 			customClaims.setOrder_manager(true);
-			//customClaims.setGuest_admin(true);
+			// customClaims.setGuest_admin(true);
 			customClaims.setUser_manager(true);
 		}
 		return customClaims;
@@ -130,20 +130,21 @@ public class TokenController {
 	@GetMapping("/logout")
 	private void forceLogout(@RequestParam(value = "uid", required = false) String uid) {
 		List<String> uids = new ArrayList<>();
-		
-		if(uid != null)
+
+		if (uid != null)
 			uids.add(uid);
-		
+
 		else {
 			uids.add(CUSTOM_CLAIMS_UID_MANUKA);
 		}
-		
-		for(String userID: uids) {
+
+		for (String userID : uids) {
 			DocumentReference refStore = com.google.firebase.cloud.FirestoreClient.getFirestore().collection("metadata")
 					.document(userID);
 			Map<String, Object> userData = new HashMap<>();
 			userData.put("revokeTime", 0);
 			refStore.set(userData);
+			revokeAllClaimsFromUsers(uid);
 		}
 	}
 
@@ -151,10 +152,20 @@ public class TokenController {
 	private void updateAllClaims(@RequestParam(value = "uid", required = false) String uid) {
 		if (uid != null) {
 			setCustomClaimToken(uid);
-			//forceLogout(uid);
+			// forceLogout(uid);
 		} else {
 			setCustomClaimToken(CUSTOM_CLAIMS_UID_MANUKA);
-			//forceLogout(CUSTOM_CLAIMS_UID_MANUKA);
+			// forceLogout(CUSTOM_CLAIMS_UID_MANUKA);
+		}
+	}
+
+	private void revokeAllClaimsFromUsers(String uid) {
+		CustomClaims customClaims = new CustomClaims();
+
+		if (customClaims != null) {
+			FirebaseAuth.getInstance().setCustomUserClaimsAsync(uid,
+					oMapper.convertValue(customClaims, new TypeReference<Map<String, Object>>() {
+					}));
 		}
 	}
 
