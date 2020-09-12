@@ -1,6 +1,8 @@
 package com.ronicy.admin;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -127,11 +129,22 @@ public class TokenController {
 
 	@GetMapping("/logout")
 	private void forceLogout(@RequestParam(value = "uid", required = false) String uid) {
-		DocumentReference refStore = com.google.firebase.cloud.FirestoreClient.getFirestore().collection("metadata")
-				.document(uid);
-		Map<String, Object> userData = new HashMap<>();
-		userData.put("revokeTime", 0);
-		refStore.set(userData);
+		List<String> uids = new ArrayList<>();
+		
+		if(uid != null)
+			uids.add(uid);
+		
+		else {
+			uids.add(CUSTOM_CLAIMS_UID_MANUKA);
+		}
+		
+		for(String userID: uids) {
+			DocumentReference refStore = com.google.firebase.cloud.FirestoreClient.getFirestore().collection("metadata")
+					.document(userID);
+			Map<String, Object> userData = new HashMap<>();
+			userData.put("revokeTime", 0);
+			refStore.set(userData);
+		}
 	}
 
 	@GetMapping("/update")
