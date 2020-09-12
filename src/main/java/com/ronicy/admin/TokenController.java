@@ -53,6 +53,7 @@ public class TokenController {
 			String customToken = getCustomClaimToken(uid);
 			return customToken;
 		}
+		
 		return null;
 	}
 
@@ -117,6 +118,7 @@ public class TokenController {
 		}
 	}
 
+	//extend time in the auth user token
 	private void extendTimeForUser(String uid) {
 		DocumentReference refStore = com.google.firebase.cloud.FirestoreClient.getFirestore().collection("metadata")
 				.document(uid);
@@ -127,6 +129,7 @@ public class TokenController {
 
 	}
 
+	//this will force a user to get reauthen ticated before accessing new content
 	@GetMapping("/logout")
 	private void forceLogout(@RequestParam(value = "uid", required = false) String uid) {
 		List<String> uids = new ArrayList<>();
@@ -148,6 +151,7 @@ public class TokenController {
 		}
 	}
 
+	//tthis will update the claims in a user
 	@GetMapping("/update")
 	private void updateAllClaims(@RequestParam(value = "uid", required = false) String uid) {
 		if (uid != null) {
@@ -159,6 +163,7 @@ public class TokenController {
 		}
 	}
 
+	//revoke all claims from users
 	private void revokeAllClaimsFromUsers(String uid) {
 		CustomClaims customClaims = new CustomClaims();
 
