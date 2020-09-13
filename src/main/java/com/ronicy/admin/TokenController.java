@@ -162,7 +162,7 @@ extendTimeForUser(uid);
 	
 	
 	@GetMapping("/revoke_claims")
-	private void revokeAllClaims(@RequestParam(value = "uid", required = false) String uid) {
+	public void revokeAllClaims(@RequestParam(value = "uid", required = false) String uid) {
 		if (uid != null) {
 			revokeAllClaimsFromUsers(uid);
 			// forceLogout(uid);
