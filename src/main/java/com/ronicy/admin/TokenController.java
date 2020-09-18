@@ -74,11 +74,12 @@ public class TokenController {
 	private void setCustomClaimToken(String uid) {
 		CustomClaims customClaims = getClaimsForUID(uid);
 
-		if (customClaims != null) {
+		if (uid != null) {
 			FirebaseAuth.getInstance().setCustomUserClaimsAsync(uid,
 					oMapper.convertValue(customClaims, new TypeReference<Map<String, Object>>() {
 					}));
 
+extendTimeForUser(uid);
 		}
 	}
 
@@ -143,7 +144,7 @@ public class TokenController {
 			Map<String, Object> userData = new HashMap<>();
 			userData.put("revokeTime", 0);
 			refStore.set(userData);
-			revokeAllClaimsFromUsers(uid);
+			revokeAllClaimsFromUsers(userID);
 		}
 	}
 
@@ -158,12 +159,24 @@ public class TokenController {
 			// forceLogout(CUSTOM_CLAIMS_UID_MANUKA);
 		}
 	}
+	
+	
+	@GetMapping("/revoke_claims")
+	public void revokeAllClaims(@RequestParam(value = "uid", required = false) String uid) {
+		if (uid != null) {
+			revokeAllClaimsFromUsers(uid);
+			// forceLogout(uid);
+		} else {
+			revokeAllClaimsFromUsers(CUSTOM_CLAIMS_UID_MANUKA);
+			// forceLogout(CUSTOM_CLAIMS_UID_MANUKA);
+		}
+	}
 
 	//revoke all claims from users
 	private void revokeAllClaimsFromUsers(String uid) {
 		CustomClaims customClaims = new CustomClaims();
 
-		if (customClaims != null) {
+		if (uid != null) {
 			FirebaseAuth.getInstance().setCustomUserClaimsAsync(uid,
 					oMapper.convertValue(customClaims, new TypeReference<Map<String, Object>>() {
 					}));
