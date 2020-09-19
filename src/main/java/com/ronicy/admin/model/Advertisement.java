@@ -43,6 +43,7 @@ public class Advertisement {
 
 	public void setId(String id) {
 		this.id = id;
+		this.objectID = id;
 	}
 
 	public String getObjectID() {

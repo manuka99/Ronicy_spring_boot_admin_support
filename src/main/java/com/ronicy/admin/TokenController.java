@@ -96,7 +96,7 @@ extendTimeForUser(uid);
 	}
 
 	@GetMapping("/refresh")
-	public void revokeRefreshTokens(@RequestParam(value = "uid", required = false) String uid) {
+	public String revokeRefreshTokens(@RequestParam(value = "uid", required = false) String uid) {
 		try {
 			FirebaseAuth.getInstance().revokeRefreshTokens(uid);
 			UserRecord user = FirebaseAuth.getInstance().getUser(uid);
@@ -113,6 +113,7 @@ extendTimeForUser(uid);
 		} catch (FirebaseAuthException e) {
 			e.printStackTrace();
 		}
+		return "add a time of expire to auth user";
 	}
 
 	//extend time in the auth user token
@@ -128,7 +129,7 @@ extendTimeForUser(uid);
 
 	//this will force a user to get reauthen ticated before accessing new content
 	@GetMapping("/logout")
-	private void forceLogout(@RequestParam(value = "uid", required = false) String uid) {
+	private String forceLogout(@RequestParam(value = "uid", required = false) String uid) {
 		List<String> uids = new ArrayList<>();
 
 		if (uid != null)
@@ -146,6 +147,7 @@ extendTimeForUser(uid);
 			refStore.set(userData);
 			revokeAllClaimsFromUsers(userID);
 		}
+		return "if uid is present that user will not be able to update firestorecloud else all administrators";
 	}
 
 	//tthis will update the claims in a user
