@@ -147,7 +147,7 @@ extendTimeForUser(uid);
 			refStore.set(userData);
 			revokeAllClaimsFromUsers(userID);
 		}
-		return "if uid is present that user will not be able to update firestorecloud else all administrators";
+		return "if uid is present that user will not be able to update firestorecloud else all administrators/ no claims ";
 	}
 
 	//tthis will update the claims in a user
