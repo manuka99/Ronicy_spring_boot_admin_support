@@ -25,6 +25,7 @@ public class TokenController {
 	ObjectMapper oMapper;
 
 	private static final String CUSTOM_CLAIMS_UID_MANUKA = "O9i9UFnGdJfmdI6cIqqLuvYbTpD3";
+	private static final String CUSTOM_CLAIMS_UID_GUEST = "rTUXfBIXT4hTZh8TiSoroptvAas1";
 
 	@GetMapping("/user/get_token")
 	public String validateIDToken(@RequestParam(value = "tokenID", required = false) String tokenID) {
@@ -49,7 +50,7 @@ public class TokenController {
 			String customToken = getCustomClaimToken(uid);
 			return customToken;
 		}
-		
+
 		return null;
 	}
 
@@ -79,7 +80,7 @@ public class TokenController {
 					oMapper.convertValue(customClaims, new TypeReference<Map<String, Object>>() {
 					}));
 
-extendTimeForUser(uid);
+			extendTimeForUser(uid);
 		}
 	}
 
@@ -91,7 +92,9 @@ extendTimeForUser(uid);
 			customClaims.setOrder_manager(true);
 			// customClaims.setGuest_admin(true);
 			customClaims.setUser_manager(true);
-		}
+		} else if (uid.equals(CUSTOM_CLAIMS_UID_GUEST))
+			customClaims.setGuest_admin(true);
+
 		return customClaims;
 	}
 
@@ -116,7 +119,7 @@ extendTimeForUser(uid);
 		return "add a time of expire to auth user";
 	}
 
-	//extend time in the auth user token
+	// extend time in the auth user token
 	private void extendTimeForUser(String uid) {
 		DocumentReference refStore = com.google.firebase.cloud.FirestoreClient.getFirestore().collection("metadata")
 				.document(uid);
@@ -127,7 +130,7 @@ extendTimeForUser(uid);
 
 	}
 
-	//this will force a user to get reauthen ticated before accessing new content
+	// this will force a user to get reauthen ticated before accessing new content
 	@GetMapping("/logout")
 	private String forceLogout(@RequestParam(value = "uid", required = false) String uid) {
 		List<String> uids = new ArrayList<>();
@@ -137,6 +140,7 @@ extendTimeForUser(uid);
 
 		else {
 			uids.add(CUSTOM_CLAIMS_UID_MANUKA);
+			uids.add(CUSTOM_CLAIMS_UID_GUEST);
 		}
 
 		for (String userID : uids) {
@@ -150,7 +154,7 @@ extendTimeForUser(uid);
 		return "if uid is present that user will not be able to update firestorecloud else all administrators/ no claims ";
 	}
 
-	//tthis will update the claims in a user
+	// tthis will update the claims in a user
 	@GetMapping("/update")
 	private void updateAllClaims(@RequestParam(value = "uid", required = false) String uid) {
 		if (uid != null) {
@@ -158,11 +162,11 @@ extendTimeForUser(uid);
 			// forceLogout(uid);
 		} else {
 			setCustomClaimToken(CUSTOM_CLAIMS_UID_MANUKA);
+			setCustomClaimToken(CUSTOM_CLAIMS_UID_GUEST);
 			// forceLogout(CUSTOM_CLAIMS_UID_MANUKA);
 		}
 	}
-	
-	
+
 	@GetMapping("/revoke_claims")
 	public void revokeAllClaims(@RequestParam(value = "uid", required = false) String uid) {
 		if (uid != null) {
@@ -170,11 +174,12 @@ extendTimeForUser(uid);
 			// forceLogout(uid);
 		} else {
 			revokeAllClaimsFromUsers(CUSTOM_CLAIMS_UID_MANUKA);
+			revokeAllClaimsFromUsers(CUSTOM_CLAIMS_UID_GUEST);
 			// forceLogout(CUSTOM_CLAIMS_UID_MANUKA);
 		}
 	}
 
-	//revoke all claims from users
+	// revoke all claims from users
 	private void revokeAllClaimsFromUsers(String uid) {
 		CustomClaims customClaims = new CustomClaims();
 
