@@ -24,7 +24,6 @@ public class TokenController {
 	@Autowired
 	ObjectMapper oMapper;
 
-	@Autowired
 	Administrators accessAdministrators;
 
 	@GetMapping("/user/get_token")
