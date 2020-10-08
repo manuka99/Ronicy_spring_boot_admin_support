@@ -6,6 +6,10 @@ import java.io.IOException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
@@ -33,4 +37,14 @@ public class RonicyAdminAupportSpring1Application {
 		}
 	}
 
+    @Configuration
+    public class WebConfig implements WebMvcConfigurer {      
+        @Override
+        public void addResourceHandlers(ResourceHandlerRegistry registry) {
+            registry.addResourceHandler("/**")
+            .addResourceLocations("classpath:/static/","classpath:/image/")
+            .setCachePeriod(0);
+        }
+    }
+    
 }

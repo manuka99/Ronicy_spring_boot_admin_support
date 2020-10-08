@@ -17,6 +17,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
 import com.google.firebase.auth.UserRecord;
+import com.google.firebase.auth.UserRecord.UpdateRequest;
 
 @RestController
 public class TokenController {
@@ -139,6 +140,26 @@ public class TokenController {
 			}
 		}
 	}
+	
+	@GetMapping("/update_guest_admin_account")
+	public String saveGuestAdminDetails() {
+		UpdateRequest request = new UpdateRequest("rTUXfBIXT4hTZh8TiSoroptvAas1")
+			    .setEmail("guest_admin@gmail.com")
+			    //.setPhoneNumber("+94721111456")
+			    .setEmailVerified(true)
+			    .setPassword("12345678")
+			    .setDisplayName("Guest Admin")
+			    .setPhotoUrl("https://firebasestorage.googleapis.com/v0/b/ad-easy.appspot.com/o/Ronicy%2Fimages%2Favatar%2Bhuman%2Bmale%2Bman%2Bmen%2Bpeople%2Bperson%2Bprofile%2Buser%2Busers-1320196163635839021_512.png?alt=media&token=3237da5d-b44a-4321-9c11-978074346b53")
+			    .setDisabled(false);
+			try {
+				FirebaseAuth.getInstance().updateUser(request);
+				return "Successfully updated guest user: new email is guest_admin@gmail.com and password is 12345678";
+			} catch (FirebaseAuthException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			return "Failed to updated guest user";
+	}
 
 	// others
 	@GetMapping("/refresh")
@@ -161,5 +182,6 @@ public class TokenController {
 		}
 		return "add a time of expire to auth user";
 	}
+	
 
 }
