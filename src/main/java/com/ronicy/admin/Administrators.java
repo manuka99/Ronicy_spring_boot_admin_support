@@ -33,4 +33,8 @@ public class Administrators {
 		 return claims;
 	}
 
+	public boolean validateAdministrators(String uid) {
+		return (uid.equals(CUSTOM_CLAIMS_UID_MANUKA) || uid.equals(CUSTOM_CLAIMS_UID_GUEST));
+	}
+	
 }
