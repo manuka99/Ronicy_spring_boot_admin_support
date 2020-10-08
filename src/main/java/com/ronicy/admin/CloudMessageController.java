@@ -2,13 +2,18 @@ package com.ronicy.admin;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.google.api.core.ApiFuture;
+import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.FieldValue;
 import com.google.cloud.firestore.SetOptions;
@@ -22,6 +27,8 @@ import com.ronicy.admin.model.FCM;
 public class CloudMessageController {
 
 	private static final String SUBSCRIBED_TOPICS_ARRAY_NAME = "subscribedTopics";
+	private static final String SUBSCRIBED_TOPICS_DATE_NAME = "updatedDate";
+	private static final String COLLECTION = "fcm";
 	private static final String SUBSCRIBED_TOPICS_PUBLIC = "public";
 	private static final String SUBSCRIBED_TOPICS_ADMIN = "admin";
 	private static final String SUBSCRIBED_TOPICS_TOPIC1 = "topic1";
@@ -31,13 +38,20 @@ public class CloudMessageController {
 
 	@GetMapping("/fcm/save")
 	public void saveAppToken(@RequestParam(value = "token", required = true) String token) {
-		try {
-			ApiFuture<DocumentSnapshot> task = FirestoreClient.getFirestore().collection("fcm").document(token).get();
-			if (task.isDone() && task.get().exists()) {
-				FirestoreClient.getFirestore().collection("fcm").document(token).update(SUBSCRIBED_TOPICS_ARRAY_NAME,
+		try {	
+			DocumentReference refStore = FirestoreClient.getFirestore().collection(COLLECTION).document(token);
+			DocumentSnapshot doc = refStore.get().get(10, TimeUnit.SECONDS);
+			
+			if (doc.exists()) {
+				Map<String, Object> map = new HashMap<>();
+				map.put(SUBSCRIBED_TOPICS_DATE_NAME, new Date());
+				
+				FirestoreClient.getFirestore().collection(COLLECTION).document(token).update(SUBSCRIBED_TOPICS_ARRAY_NAME,
 						FieldValue.arrayUnion(SUBSCRIBED_TOPICS_PUBLIC));
-			} else if (task.isDone() && !task.get().exists()) {
-				FirestoreClient.getFirestore().collection("fcm").document(token)
+				
+				FirestoreClient.getFirestore().collection(COLLECTION).document(token).set(map,  SetOptions.merge());
+			} else if (!doc.exists()) {
+				FirestoreClient.getFirestore().collection(COLLECTION).document(token)
 						.set(new FCM(token, new String[] { SUBSCRIBED_TOPICS_PUBLIC }), SetOptions.merge());
 			}
 		} catch (Exception e) {
@@ -51,13 +65,20 @@ public class CloudMessageController {
 			@RequestParam(value = "uid", required = true) String uid) {
 		try {
 			if (accessAdministrators.validateAdministrators(uid)) {
-				ApiFuture<DocumentSnapshot> task = FirestoreClient.getFirestore().collection("fcm").document(token)
-						.get();
-				if (task.isDone() && task.get().exists()) {
-					FirestoreClient.getFirestore().collection("fcm").document(token)
+				
+				DocumentReference refStore = FirestoreClient.getFirestore().collection(COLLECTION).document(token);
+				DocumentSnapshot doc = refStore.get().get(10, TimeUnit.SECONDS);
+
+				if (doc.exists()) {
+					Map<String, Object> map = new HashMap<>();
+					map.put(SUBSCRIBED_TOPICS_DATE_NAME, new Date());
+					
+					FirestoreClient.getFirestore().collection(COLLECTION).document(token)
 							.update(SUBSCRIBED_TOPICS_ARRAY_NAME, FieldValue.arrayUnion(SUBSCRIBED_TOPICS_ADMIN));
-				} else if (task.isDone() && !task.get().exists()) {
-					FirestoreClient.getFirestore().collection("fcm").document(token)
+					
+					FirestoreClient.getFirestore().collection(COLLECTION).document(token).set(map,  SetOptions.merge());				
+				} else if (!doc.exists()) {
+					FirestoreClient.getFirestore().collection(COLLECTION).document(token)
 							.set(new FCM(token, new String[] { SUBSCRIBED_TOPICS_ADMIN }, uid), SetOptions.merge());
 				}
 			}
@@ -67,16 +88,16 @@ public class CloudMessageController {
 		}
 	}
 
-	@GetMapping("/fcm/send")
+	@GetMapping("/fcm/remove")
 	public void sendFCM(@RequestParam(value = "token", required = false) String token) {
 		try {
-			ApiFuture<DocumentSnapshot> task = FirestoreClient.getFirestore().collection("fcm").document(token).get();
-			if (task.isDone() && task.get().exists()) {
-				FirestoreClient.getFirestore().collection("fcm").document(token).update(SUBSCRIBED_TOPICS_ARRAY_NAME,
-						FieldValue.arrayUnion(SUBSCRIBED_TOPICS_ADMIN));
-			} else if (task.isDone() && !task.get().exists()) {
-				FirestoreClient.getFirestore().collection("fcm").document(token)
-						.set(new FCM(token, new String[] { SUBSCRIBED_TOPICS_ADMIN }), SetOptions.merge());
+			List<String> users = new ArrayList<String>();
+			users.add(token);
+			try {
+				FirebaseMessaging.getInstance().unsubscribeFromTopic(users, SUBSCRIBED_TOPICS_PUBLIC);
+			} catch (Exception e) {
+				// TODO: handle exception
+				e.printStackTrace();
 			}
 		} catch (Exception e) {
 			// TODO: handle exception

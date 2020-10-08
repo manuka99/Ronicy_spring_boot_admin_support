@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,7 +13,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.api.core.ApiFuture;
+import com.google.api.core.ApiFutureCallback;
+import com.google.api.core.ApiFutures;
 import com.google.cloud.firestore.DocumentReference;
+import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
@@ -59,8 +64,10 @@ public class TokenController {
 		try {
 			DocumentReference refStore = com.google.firebase.cloud.FirestoreClient.getFirestore().collection("metadata")
 					.document(uid);
+			
+			DocumentSnapshot doc = refStore.get().get(10, TimeUnit.SECONDS);
 
-			if (refStore.get().isDone() && refStore.get().get().exists()) {
+			if (doc.exists()) {
 				Map<String, Object> userData = new HashMap<>();
 				userData.put("revokeTime", 10000);
 				refStore.set(userData);
@@ -89,7 +96,13 @@ public class TokenController {
 				DocumentReference refStore = com.google.firebase.cloud.FirestoreClient.getFirestore()
 						.collection("metadata").document(userID);
 
-				if (refStore.get().isDone() && refStore.get().get().exists()) {
+				System.out.println("sending");
+
+				DocumentSnapshot doc = refStore.get().get(10, TimeUnit.SECONDS);
+
+				if (doc.exists()) {
+					System.out.println("success");
+
 					Map<String, Object> userData = new HashMap<>();
 					userData.put("revokeTime", 0);
 					refStore.set(userData);
@@ -140,25 +153,23 @@ public class TokenController {
 			}
 		}
 	}
-	
+
 	@GetMapping("/update_guest_admin_account")
 	public String saveGuestAdminDetails() {
-		UpdateRequest request = new UpdateRequest("rTUXfBIXT4hTZh8TiSoroptvAas1")
-			    .setEmail("guest_admin@gmail.com")
-			    //.setPhoneNumber("+94721111456")
-			    .setEmailVerified(true)
-			    .setPassword("12345678")
-			    .setDisplayName("Guest Admin")
-			    .setPhotoUrl("https://firebasestorage.googleapis.com/v0/b/ad-easy.appspot.com/o/Ronicy%2Fimages%2Favatar%2Bhuman%2Bmale%2Bman%2Bmen%2Bpeople%2Bperson%2Bprofile%2Buser%2Busers-1320196163635839021_512.png?alt=media&token=3237da5d-b44a-4321-9c11-978074346b53")
-			    .setDisabled(false);
-			try {
-				FirebaseAuth.getInstance().updateUser(request);
-				return "Successfully updated guest user: new email is guest_admin@gmail.com and password is 12345678";
-			} catch (FirebaseAuthException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			return "Failed to updated guest user";
+		UpdateRequest request = new UpdateRequest("rTUXfBIXT4hTZh8TiSoroptvAas1").setEmail("guest_admin@gmail.com")
+				// .setPhoneNumber("+94721111456")
+				.setEmailVerified(true).setPassword("12345678").setDisplayName("Guest Admin")
+				.setPhotoUrl(
+						"https://firebasestorage.googleapis.com/v0/b/ad-easy.appspot.com/o/Ronicy%2Fimages%2Favatar%2Bhuman%2Bmale%2Bman%2Bmen%2Bpeople%2Bperson%2Bprofile%2Buser%2Busers-1320196163635839021_512.png?alt=media&token=3237da5d-b44a-4321-9c11-978074346b53")
+				.setDisabled(false);
+		try {
+			FirebaseAuth.getInstance().updateUser(request);
+			return "Successfully updated guest user: new email is guest_admin@gmail.com and password is 12345678";
+		} catch (FirebaseAuthException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return "Failed to updated guest user";
 	}
 
 	// others
@@ -182,6 +193,5 @@ public class TokenController {
 		}
 		return "add a time of expire to auth user";
 	}
-	
 
 }

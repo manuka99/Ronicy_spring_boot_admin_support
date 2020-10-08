@@ -1,12 +1,15 @@
 package com.ronicy.admin.model;
 
+import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
-public class FCM {
+public class FCM implements Serializable{
 
 	private String token;
 	private Date updatedDate;
-	private String[] subscribedTopics;
+	private List<String> subscribedTopics;
 	private String uid;
 
 	public FCM() {
@@ -16,13 +19,19 @@ public class FCM {
 	public FCM(String token, String[] topics) {
 		this.token = token;
 		this.updatedDate = new Date();
-		this.subscribedTopics = topics;
+		this.subscribedTopics = new ArrayList<>();
+		for(String topic: topics) {
+			this.subscribedTopics.add(topic);
+		}
 	}
 
 	public FCM(String token, String[] topics, String uid) {
 		this.token = token;
 		this.updatedDate = new Date();
-		this.subscribedTopics = topics;
+		this.subscribedTopics = new ArrayList<>();
+		for(String topic: topics) {
+			this.subscribedTopics.add(topic);
+		}
 		this.uid = uid;
 	}
 
@@ -42,11 +51,11 @@ public class FCM {
 		this.updatedDate = updatedDate;
 	}
 
-	public String[] getSubscribedTopics() {
+	public List<String>  getSubscribedTopics() {
 		return subscribedTopics;
 	}
 
-	public void setSubscribedTopics(String[] subscribedTopics) {
+	public void setSubscribedTopics(List<String>  subscribedTopics) {
 		this.subscribedTopics = subscribedTopics;
 	}
 
