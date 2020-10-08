@@ -24,7 +24,7 @@ public class TokenController {
 	@Autowired
 	ObjectMapper oMapper;
 
-	Administrators accessAdministrators;
+	Administrators accessAdministrators = new Administrators();
 
 	@GetMapping("/user/get_token")
 	public String validateIDToken(@RequestParam(value = "tokenID", required = false) String tokenID) {
