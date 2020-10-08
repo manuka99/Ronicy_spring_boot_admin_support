@@ -24,8 +24,8 @@ public class TokenController {
 	@Autowired
 	ObjectMapper oMapper;
 
-	private static final String CUSTOM_CLAIMS_UID_MANUKA = "O9i9UFnGdJfmdI6cIqqLuvYbTpD3";
-	private static final String CUSTOM_CLAIMS_UID_GUEST = "rTUXfBIXT4hTZh8TiSoroptvAas1";
+	@Autowired
+	Administrators accessAdministrators;
 
 	@GetMapping("/user/get_token")
 	public String validateIDToken(@RequestParam(value = "tokenID", required = false) String tokenID) {
@@ -34,9 +34,7 @@ public class TokenController {
 			FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(tokenID);
 			uid = decodedToken.getUid();
 			if (uid != null) {
-				// returnCustomClaimsAddedTokenToClient(uid);
-				setCustomClaimToken(uid);
-				extendTimeForUser(uid);
+				setCustomClaimsByUID(uid);
 			}
 		} catch (FirebaseAuthException e) {
 			e.printStackTrace();
@@ -45,61 +43,107 @@ public class TokenController {
 		return "";
 	}
 
-	public String returnCustomClaimsAddedTokenToClient(String uid) {
-		if (uid != null) {
-			String customToken = getCustomClaimToken(uid);
-			return customToken;
-		}
-
-		return null;
-	}
-
-	private String getCustomClaimToken(String uid) {
-		String customToken = null;
-		CustomClaims customClaims = getClaimsForUID(uid);
-		if (customClaims != null) {
-			try {
-				customToken = FirebaseAuth.getInstance().createCustomToken(uid,
-						oMapper.convertValue(customClaims, new TypeReference<Map<String, Object>>() {
-						}));
-			} catch (FirebaseAuthException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-
-			System.out.println(customToken);
-		}
-		return customToken;
-	}
-
-	private void setCustomClaimToken(String uid) {
-		CustomClaims customClaims = getClaimsForUID(uid);
+	private void setCustomClaimsByUID(String uid) {
+		CustomClaims customClaims = accessAdministrators.getClaimsForAdministratorByUID(uid);
 
 		if (uid != null) {
 			FirebaseAuth.getInstance().setCustomUserClaimsAsync(uid,
 					oMapper.convertValue(customClaims, new TypeReference<Map<String, Object>>() {
 					}));
-
 			extendTimeForUser(uid);
 		}
 	}
 
-	private CustomClaims getClaimsForUID(String uid) {
-		CustomClaims customClaims = new CustomClaims();
-		if (uid.equals(CUSTOM_CLAIMS_UID_MANUKA)) {
-			/// customClaims.setAdmin(true);
-			customClaims.setAdvertisement_manager(true);
-			customClaims.setOrder_manager(true);
-			// customClaims.setGuest_admin(true);
-			customClaims.setUser_manager(true);
-		} else if (uid.equals(CUSTOM_CLAIMS_UID_GUEST))
-			customClaims.setGuest_admin(true);
+	// extend time in the auth user token
+	private void extendTimeForUser(String uid) {
+		try {
+			DocumentReference refStore = com.google.firebase.cloud.FirestoreClient.getFirestore().collection("metadata")
+					.document(uid);
 
-		return customClaims;
+			if (refStore.get().isDone() && refStore.get().get().exists()) {
+				Map<String, Object> userData = new HashMap<>();
+				userData.put("revokeTime", 10000);
+				refStore.set(userData);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
+	// this will force a user to get re authenticated before accessing new content
+	@GetMapping("/logout")
+	private String forceLogout(@RequestParam(value = "uid", required = false) String uid) {
+		List<String> uids = new ArrayList<>();
+
+		if (uid != null)
+			uids.add(uid);
+
+		else {
+			for (String id : accessAdministrators.getAllAdministrators()) {
+				uids.add(id);
+			}
+		}
+
+		for (String userID : uids) {
+			try {
+				DocumentReference refStore = com.google.firebase.cloud.FirestoreClient.getFirestore()
+						.collection("metadata").document(userID);
+
+				if (refStore.get().isDone() && refStore.get().get().exists()) {
+					Map<String, Object> userData = new HashMap<>();
+					userData.put("revokeTime", 0);
+					refStore.set(userData);
+					revokeAllClaimsFromUser(userID);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		return "if uid is present that user will not be able to update firestorecloud else all administrators/ no claims ";
+	}
+
+	// this will update the claims in a user and extends time
+	@GetMapping("/update")
+	private String updateAllClaims(@RequestParam(value = "uid", required = false) String uid) {
+		if (uid != null) {
+			setCustomClaimsByUID(uid);
+		} else {
+			for (String id : accessAdministrators.getAllAdministrators()) {
+				setCustomClaimsByUID(id);
+			}
+		}
+		return "if uid is present, the claims for that user will be updated else all administrators and time extended";
+	}
+
+	@GetMapping("/revoke_claims")
+	public String revokeAllClaims(@RequestParam(value = "uid", required = false) String uid) {
+		if (uid != null) {
+			revokeAllClaimsFromUser(uid);
+		} else {
+			for (String id : accessAdministrators.getAllAdministrators()) {
+				revokeAllClaimsFromUser(id);
+			}
+		}
+		return "if uid is present, the claims for that user will be removed else all administrators and time not changed";
+	}
+
+	// revoke all claims from users
+	private void revokeAllClaimsFromUser(String uid) {
+		CustomClaims customClaims = new CustomClaims();
+		if (uid != null) {
+			try {
+				FirebaseAuth.getInstance().setCustomUserClaimsAsync(uid,
+						oMapper.convertValue(customClaims, new TypeReference<Map<String, Object>>() {
+						}));
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	// others
 	@GetMapping("/refresh")
-	public String revokeRefreshTokens(@RequestParam(value = "uid", required = false) String uid) {
+	public String revokeRefreshTokens(@RequestParam(value = "uid", required = true) String uid) {
 		try {
 			FirebaseAuth.getInstance().revokeRefreshTokens(uid);
 			UserRecord user = FirebaseAuth.getInstance().getUser(uid);
@@ -117,77 +161,6 @@ public class TokenController {
 			e.printStackTrace();
 		}
 		return "add a time of expire to auth user";
-	}
-
-	// extend time in the auth user token
-	private void extendTimeForUser(String uid) {
-		DocumentReference refStore = com.google.firebase.cloud.FirestoreClient.getFirestore().collection("metadata")
-				.document(uid);
-
-		Map<String, Object> userData = new HashMap<>();
-		userData.put("revokeTime", 10000);
-		refStore.set(userData);
-
-	}
-
-	// this will force a user to get reauthen ticated before accessing new content
-	@GetMapping("/logout")
-	private String forceLogout(@RequestParam(value = "uid", required = false) String uid) {
-		List<String> uids = new ArrayList<>();
-
-		if (uid != null)
-			uids.add(uid);
-
-		else {
-			uids.add(CUSTOM_CLAIMS_UID_MANUKA);
-			uids.add(CUSTOM_CLAIMS_UID_GUEST);
-		}
-
-		for (String userID : uids) {
-			DocumentReference refStore = com.google.firebase.cloud.FirestoreClient.getFirestore().collection("metadata")
-					.document(userID);
-			Map<String, Object> userData = new HashMap<>();
-			userData.put("revokeTime", 0);
-			refStore.set(userData);
-			revokeAllClaimsFromUsers(userID);
-		}
-		return "if uid is present that user will not be able to update firestorecloud else all administrators/ no claims ";
-	}
-
-	// tthis will update the claims in a user
-	@GetMapping("/update")
-	private void updateAllClaims(@RequestParam(value = "uid", required = false) String uid) {
-		if (uid != null) {
-			setCustomClaimToken(uid);
-			// forceLogout(uid);
-		} else {
-			setCustomClaimToken(CUSTOM_CLAIMS_UID_MANUKA);
-			setCustomClaimToken(CUSTOM_CLAIMS_UID_GUEST);
-			// forceLogout(CUSTOM_CLAIMS_UID_MANUKA);
-		}
-	}
-
-	@GetMapping("/revoke_claims")
-	public void revokeAllClaims(@RequestParam(value = "uid", required = false) String uid) {
-		if (uid != null) {
-			revokeAllClaimsFromUsers(uid);
-			// forceLogout(uid);
-		} else {
-			revokeAllClaimsFromUsers(CUSTOM_CLAIMS_UID_MANUKA);
-			revokeAllClaimsFromUsers(CUSTOM_CLAIMS_UID_GUEST);
-			// forceLogout(CUSTOM_CLAIMS_UID_MANUKA);
-		}
-	}
-
-	// revoke all claims from users
-	private void revokeAllClaimsFromUsers(String uid) {
-		CustomClaims customClaims = new CustomClaims();
-
-		if (uid != null) {
-			FirebaseAuth.getInstance().setCustomUserClaimsAsync(uid,
-					oMapper.convertValue(customClaims, new TypeReference<Map<String, Object>>() {
-					}));
-		}
 	}
 
 }

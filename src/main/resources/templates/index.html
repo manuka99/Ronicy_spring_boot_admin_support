@@ -14,12 +14,25 @@
 <p style="font-size: 24px">This server is designed and developed for administrators of Ronicy.lk Team to manage their administration work, administration level authentication and as a support server for the search engine Algolia. As a public user you can try out these features.</p>
 
 
-<h3>[[${urls[0]}]]</h3>
-<h3>[[${urls[1]}]]</h3>
-<h3>[[${urls[2]}]]</h3>
-<h3>[[${urls[3]}]]</h3>
-<h3>[[${urls[4]}]]</h3>
-<h3>[[${urls[5]}]]</h3>
+<h3>Manage Algolia services</h3>
+
+<a href= "/algolia/start" >click here to clear all records and add the documents from the advertisement collection</a>
+<a href= "/algolia/listen" >click here to clear all records and add the documents from the advertisement collection</a>
+
+<!-- <a href= "/refresh" >click here to to add auth expire time of 1 hour/ pass uid as a parameter</a> -->
+
+<h3>Manage Authentication services</h3>
+
+<a href= "/update" >send uid/ or applies to all admins / update claims and time extends</a>
+<a href= "/revoke_claims" > send uid/ or applies to all admins / all administration claims are removed</a>
+<a href= "/logout" >send uid/ or applies to all admins / all administration claims are removed and no access to firestore</a>
+
+
+<h3>Manage FCM services</h3>
+
+<a href= "/fcm/save" >subscribe to our public FCM(parameters: token)</a>
+<a href= "/fcm/remove-admin" >unsubscribe an administrator (parameters: token)</a>
+
 
 <div style="height:60px"></div>
 <hr>
