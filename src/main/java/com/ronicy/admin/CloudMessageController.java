@@ -28,6 +28,7 @@ public class CloudMessageController {
 
 	private static final String SUBSCRIBED_TOPICS_ARRAY_NAME = "subscribedTopics";
 	private static final String SUBSCRIBED_TOPICS_DATE_NAME = "updatedDate";
+	private static final String SUBSCRIBED_TOPICS_UID = "uid";
 	private static final String COLLECTION = "fcm";
 	private static final String SUBSCRIBED_TOPICS_PUBLIC = "public";
 	private static final String SUBSCRIBED_TOPICS_ADMIN = "admin";
@@ -72,6 +73,7 @@ public class CloudMessageController {
 				if (doc.exists()) {
 					Map<String, Object> map = new HashMap<>();
 					map.put(SUBSCRIBED_TOPICS_DATE_NAME, new Date());
+					map.put(SUBSCRIBED_TOPICS_UID, uid);
 					
 					FirestoreClient.getFirestore().collection(COLLECTION).document(token)
 							.update(SUBSCRIBED_TOPICS_ARRAY_NAME, FieldValue.arrayUnion(SUBSCRIBED_TOPICS_ADMIN));
