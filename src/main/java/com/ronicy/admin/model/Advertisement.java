@@ -3,6 +3,7 @@ package com.ronicy.admin.model;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import com.google.cloud.firestore.annotation.Exclude;
 
@@ -25,6 +26,7 @@ public class Advertisement {
 	private String location;
 	private String unapprovedReason;
 	private boolean reviewed;
+    private Map<String, Date> promotions;
 
 	public Advertisement() {
 		this.placedDate = new Date();
@@ -173,6 +175,14 @@ public class Advertisement {
 
 	public void setReviewed(boolean reviewed) {
 		this.reviewed = reviewed;
+	}
+
+	public Map<String, Date> getPromotions() {
+		return promotions;
+	}
+
+	public void setPromotions(Map<String, Date> promotions) {
+		this.promotions = promotions;
 	}
 
 }
