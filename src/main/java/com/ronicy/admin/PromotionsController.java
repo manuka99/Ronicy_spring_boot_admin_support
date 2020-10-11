@@ -142,6 +142,8 @@ public class PromotionsController {
 
 			System.out.println("done...");
 
+			updateUrgentAds();
+			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
