@@ -14,6 +14,7 @@ import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.EventListener;
 import com.google.cloud.firestore.FirestoreException;
+import com.google.cloud.firestore.Query.Direction;
 import com.google.cloud.firestore.QuerySnapshot;
 import com.google.cloud.firestore.SetOptions;
 import com.google.cloud.firestore.WriteResult;
@@ -26,6 +27,7 @@ public class PromotionsController {
 
 	private static final String PROMOTIONS = "Promotions";
 	private static final String APPROVED_PROMOTIONS = "ApprovedPromotions";
+	private static final String ADVERTISEMENT = "Advertisement";
 
 	@GetMapping("/promotions/update")
 	public void updatePromotions() {
@@ -307,12 +309,72 @@ public class PromotionsController {
 		return approvedPromotions;
 	}
 
+	// if an promotion was applied then save that promotion as activated
 	private void upDatePromoAsActivated(String promoID) {
 		Map<String, Boolean> map = new HashMap<>();
 		map.put("activated", true);
 
 		try {
 			FirestoreClient.getFirestore().collection(PROMOTIONS).document(promoID).set(map, SetOptions.merge()).get();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	@GetMapping("/promotions/daily")
+	private void updateDailyBumpAds() {
+		ApiFuture<QuerySnapshot> query = FirestoreClient.getFirestore().collection(APPROVED_PROMOTIONS)
+				.whereEqualTo("stopPromotions", false).whereGreaterThan("dailyPromoPromoExpireTime", new Date())
+				.orderBy("dailyPromoPromoExpireTime", Direction.ASCENDING).get();
+
+		try {
+			QuerySnapshot snapShot = query.get();
+
+			for (ApprovedPromotions approvedPromotions : snapShot.toObjects(ApprovedPromotions.class)) {
+				Map<String, Object> map = new HashMap<>();
+				map.put("placedDate", new Date());
+
+				Map<String, Date> promotions = new HashMap<>();
+				promotions.put(String.valueOf(Promotion.DAILY_BUMP_AD), approvedPromotions.getDailyPromoPromoExpireTime());
+
+				map.put("promotions", promotions);
+				
+				try {
+					FirestoreClient.getFirestore().collection(ADVERTISEMENT)
+							.document(approvedPromotions.getAdvertismentID()).set(map, SetOptions.merge()).get();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	@GetMapping("/promotions/urgent")
+	private void updateUrgentAds() {
+		ApiFuture<QuerySnapshot> query = FirestoreClient.getFirestore().collection(APPROVED_PROMOTIONS)
+				.whereEqualTo("stopPromotions", false).whereGreaterThan("urgentPromoExpireTime", new Date())
+				.orderBy("urgentPromoExpireTime", Direction.ASCENDING).get();
+
+		try {
+			QuerySnapshot snapShot = query.get();
+
+			for (ApprovedPromotions approvedPromotions : snapShot.toObjects(ApprovedPromotions.class)) {
+				Map<String, Object> map = new HashMap<>();
+
+				Map<String, Date> promotions = new HashMap<>();
+				promotions.put(String.valueOf(Promotion.URGENT_AD), approvedPromotions.getUrgentPromoExpireTime());
+
+				map.put("promotions", promotions);
+				
+				try {
+					FirestoreClient.getFirestore().collection(ADVERTISEMENT)
+							.document(approvedPromotions.getAdvertismentID()).set(map, SetOptions.merge()).get();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
