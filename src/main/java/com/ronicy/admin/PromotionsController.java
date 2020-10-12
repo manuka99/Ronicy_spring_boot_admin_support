@@ -30,61 +30,6 @@ public class PromotionsController {
 	private static final String ADVERTISEMENT = "Advertisement";
 
 	@GetMapping("/promotions/update")
-	public void updatePromotions() {
-
-		System.out.println("updating...");
-
-		FirestoreClient.getFirestore().collection(PROMOTIONS).whereEqualTo("approved", true)
-				.whereEqualTo("reviewed", true).whereEqualTo("activated", false)
-				.addSnapshotListener(new EventListener<QuerySnapshot>() {
-
-					@Override
-					public void onEvent(QuerySnapshot querySnapshot, FirestoreException error) {
-						if (error != null) {
-							error.printStackTrace();
-						} else {
-							List<Promotion> promotions = querySnapshot.toObjects(Promotion.class);
-							for (Promotion promotion : promotions) {
-
-								String adID = promotion.getAdvertisementID();
-
-								FirestoreClient.getFirestore().collection(APPROVED_PROMOTIONS).document(adID)
-										.addSnapshotListener(new EventListener<DocumentSnapshot>() {
-
-											@Override
-											public void onEvent(DocumentSnapshot documentSnapshot,
-													FirestoreException error) {
-												if (error != null) {
-													error.printStackTrace();
-												} else if (documentSnapshot.exists()) {
-
-													ApprovedPromotions approvedPromotions = getApplyPromotionsExpiredTime(
-															documentSnapshot.toObject(ApprovedPromotions.class),
-															promotion);
-
-													FirestoreClient.getFirestore().collection(APPROVED_PROMOTIONS)
-															.document(adID).set(approvedPromotions, SetOptions.merge());
-
-												} else {
-													ApprovedPromotions approvedPromotions = getApplyPromotionsExpiredTime(
-															new ApprovedPromotions(adID, false), promotion);
-
-													FirestoreClient.getFirestore().collection(APPROVED_PROMOTIONS)
-															.document(adID).set(approvedPromotions, SetOptions.merge());
-												}
-											}
-
-										});
-
-							}
-						}
-					}
-
-				});
-
-	}
-
-	@GetMapping("/promotions/update-promos")
 	public void updatePromotionsToApproved() {
 
 		System.out.println("updating...");
