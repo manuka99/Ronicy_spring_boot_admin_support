@@ -11,6 +11,7 @@ public class ApprovedPromotions {
 	private Date dailyPromoPromoExpireTime;
 	private Date spotLightPromoExpireTime;
 	private Date topAdPromoExpireTime;
+	private Date bundleAdPromoExpireTime;
 	private Boolean stopPromotions;
 	List<String> notes;
 	List<String> promoIDs;
@@ -89,6 +90,14 @@ public class ApprovedPromotions {
 
 	public void setPromoIDs(List<String> promoIDs) {
 		this.promoIDs = promoIDs;
+	}
+
+	public Date getBundleAdPromoExpireTime() {
+		return bundleAdPromoExpireTime;
+	}
+
+	public void setBundleAdPromoExpireTime(Date bundleAdPromoExpireTime) {
+		this.bundleAdPromoExpireTime = bundleAdPromoExpireTime;
 	}
 
 }

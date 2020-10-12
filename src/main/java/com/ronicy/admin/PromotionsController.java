@@ -143,7 +143,7 @@ public class PromotionsController {
 			System.out.println("done...");
 
 			updateUrgentAds();
-			
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -306,6 +306,44 @@ public class PromotionsController {
 				}
 			}
 
+			// bundle ad
+			if (promoType.equals(String.valueOf(Promotion.BUNDLE_AD))) {
+
+				// check the time of every of the approved promotion
+
+				if (approvedPromotions.getBundleAdPromoExpireTime() != null
+						&& approvedPromotions.getBundleAdPromoExpireTime().after(new Date())) {
+					// extend time from the last expire time
+					Date pDate = approvedPromotions.getBundleAdPromoExpireTime();
+					Calendar c = Calendar.getInstance();
+					c.setTime(pDate);
+					c.add(Calendar.DATE, promotion.getPromos().get(promoType));
+
+					approvedPromotions.setBundleAdPromoExpireTime(c.getTime());
+
+					approvedPromotions.getNotes()
+							.add("promotion ID = " + promotion.getPromoID() + " Updated on " + new Date()
+									+ " bundle ad time extended. old time is " + pDate + " added "
+									+ promotion.getPromos().get(promoType) + " days");
+
+				} else {
+					// extend time from the current time
+					Date pDate = new Date();
+					Calendar c = Calendar.getInstance();
+					c.setTime(pDate);
+					c.add(Calendar.DATE, promotion.getPromos().get(promoType));
+
+					approvedPromotions.setBundleAdPromoExpireTime(c.getTime());
+
+					approvedPromotions.getNotes()
+							.add("promotion ID = " + promotion.getPromoID() + " Updated on " + new Date()
+									+ " bundle ad time updated by current time. " + promotion.getPromos().get(promoType)
+									+ " days. Last checked at " + approvedPromotions.getBundleAdPromoExpireTime());
+
+				}
+
+			}
+
 		}
 
 		return approvedPromotions;
@@ -337,10 +375,11 @@ public class PromotionsController {
 				map.put("placedDate", new Date());
 
 				Map<String, Date> promotions = new HashMap<>();
-				promotions.put(String.valueOf(Promotion.DAILY_BUMP_AD), approvedPromotions.getDailyPromoPromoExpireTime());
+				promotions.put(String.valueOf(Promotion.DAILY_BUMP_AD),
+						approvedPromotions.getDailyPromoPromoExpireTime());
 
 				map.put("promotions", promotions);
-				
+
 				try {
 					FirestoreClient.getFirestore().collection(ADVERTISEMENT)
 							.document(approvedPromotions.getAdvertismentID()).set(map, SetOptions.merge()).get();
@@ -352,7 +391,7 @@ public class PromotionsController {
 			e.printStackTrace();
 		}
 	}
-	
+
 	@GetMapping("/promotions/urgent")
 	private void updateUrgentAds() {
 		ApiFuture<QuerySnapshot> query = FirestoreClient.getFirestore().collection(APPROVED_PROMOTIONS)
@@ -369,7 +408,36 @@ public class PromotionsController {
 				promotions.put(String.valueOf(Promotion.URGENT_AD), approvedPromotions.getUrgentPromoExpireTime());
 
 				map.put("promotions", promotions);
-				
+
+				try {
+					FirestoreClient.getFirestore().collection(ADVERTISEMENT)
+							.document(approvedPromotions.getAdvertismentID()).set(map, SetOptions.merge()).get();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	@GetMapping("/promotions/bundle")
+	private void updateBundleAds() {
+		ApiFuture<QuerySnapshot> query = FirestoreClient.getFirestore().collection(APPROVED_PROMOTIONS)
+				.whereEqualTo("stopPromotions", false).whereGreaterThan("bundleAdPromoExpireTime", new Date())
+				.orderBy("bundleAdPromoExpireTime", Direction.ASCENDING).get();
+
+		try {
+			QuerySnapshot snapShot = query.get();
+
+			for (ApprovedPromotions approvedPromotions : snapShot.toObjects(ApprovedPromotions.class)) {
+				Map<String, Object> map = new HashMap<>();
+
+				Map<String, Date> promotions = new HashMap<>();
+				promotions.put(String.valueOf(Promotion.BUNDLE_AD), approvedPromotions.getBundleAdPromoExpireTime());
+
+				map.put("promotions", promotions);
+
 				try {
 					FirestoreClient.getFirestore().collection(ADVERTISEMENT)
 							.document(approvedPromotions.getAdvertismentID()).set(map, SetOptions.merge()).get();
