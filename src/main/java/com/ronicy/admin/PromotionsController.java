@@ -88,6 +88,7 @@ public class PromotionsController {
 			System.out.println("done...");
 
 			updateUrgentAds();
+			updateBundleAds();
 
 		} catch (Exception e) {
 			e.printStackTrace();
