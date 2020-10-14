@@ -40,6 +40,13 @@ public class CloudMessageController {
 	@GetMapping("/fcm/save")
 	public void saveAppToken(@RequestParam(value = "token", required = true) String token) {
 		try {	
+			//save in fcm
+			List<String> users = new ArrayList<String>();
+			users.add(token);
+			
+			FirebaseMessaging.getInstance().subscribeToTopic(users, SUBSCRIBED_TOPICS_PUBLIC);
+			
+			//save in database
 			DocumentReference refStore = FirestoreClient.getFirestore().collection(COLLECTION).document(token);
 			DocumentSnapshot doc = refStore.get().get(10, TimeUnit.SECONDS);
 			
@@ -67,6 +74,13 @@ public class CloudMessageController {
 		try {
 			if (accessAdministrators.validateAdministrators(uid)) {
 				
+				//save in fcm
+				List<String> users = new ArrayList<String>();
+				users.add(token);
+				
+				FirebaseMessaging.getInstance().subscribeToTopic(users, SUBSCRIBED_TOPICS_ADMIN);
+				
+				//save in database
 				DocumentReference refStore = FirestoreClient.getFirestore().collection(COLLECTION).document(token);
 				DocumentSnapshot doc = refStore.get().get(10, TimeUnit.SECONDS);
 
