@@ -141,7 +141,7 @@ public class TokenController {
 			try {
 				UpdateRequest request = new UpdateRequest(uid);
 				request.setCustomClaims(null);
-				FirebaseAuth.getInstance().updateUserAsync(request);
+				FirebaseAuth.getInstance().updateUser(request);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
