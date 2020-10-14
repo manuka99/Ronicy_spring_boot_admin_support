@@ -14,8 +14,8 @@ public class Administrators {
 		return new String[] { CUSTOM_CLAIMS_UID_MANUKA, CUSTOM_CLAIMS_UID_GUEST };
 	}
 
-	public Map<String, Boolean> getClaimsForAdministratorByUID(String uid) {
-		Map<String, Boolean> claims = new HashMap<>();
+	public Map<String, Object> getClaimsForAdministratorByUID(String uid) {
+		Map<String, Object> claims = new HashMap<>();
 		if (uid.equals(CUSTOM_CLAIMS_UID_MANUKA)) {
 
 			// claims.put(CustomClaims.ADMIN, true);
@@ -30,8 +30,8 @@ public class Administrators {
 		return claims;
 	}
 
-	public Map<String, Map<String, Boolean>> getClaimsForAllAdministrators() {
-		Map<String, Map<String, Boolean>> claims = new HashMap<>();
+	public Map<String, Map<String, Object>> getClaimsForAllAdministrators() {
+		Map<String, Map<String, Object>> claims = new HashMap<>();
 		claims.put(CUSTOM_CLAIMS_UID_MANUKA, getClaimsForAdministratorByUID(CUSTOM_CLAIMS_UID_MANUKA));
 		claims.put(CUSTOM_CLAIMS_UID_GUEST, getClaimsForAdministratorByUID(CUSTOM_CLAIMS_UID_GUEST));
 		return claims;

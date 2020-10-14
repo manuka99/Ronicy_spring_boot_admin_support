@@ -46,12 +46,10 @@ public class TokenController {
 	}
 
 	private void setCustomClaimsByUID(String uid) {
-		Map<String, Boolean> customClaims = accessAdministrators.getClaimsForAdministratorByUID(uid);
+		Map<String, Object> customClaims = accessAdministrators.getClaimsForAdministratorByUID(uid);
 
 		if (uid != null) {
-			FirebaseAuth.getInstance().setCustomUserClaimsAsync(uid,
-					oMapper.convertValue(customClaims, new TypeReference<Map<String, Object>>() {
-					}));
+			FirebaseAuth.getInstance().setCustomUserClaimsAsync(uid, customClaims);
 			extendTimeForUser(uid);
 		}
 	}
@@ -139,12 +137,10 @@ public class TokenController {
 
 	// revoke all claims from users
 	private void revokeAllClaimsFromUser(String uid) {
-		Map<String, Boolean> customClaims = new HashMap<>();
+		Map<String, Object> customClaims = new HashMap<>();
 		if (uid != null) {
 			try {
-				FirebaseAuth.getInstance().setCustomUserClaimsAsync(uid,
-						oMapper.convertValue(customClaims, new TypeReference<Map<String, Object>>() {
-						}));
+				FirebaseAuth.getInstance().setCustomUserClaimsAsync(uid,customClaims);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
