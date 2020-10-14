@@ -139,15 +139,14 @@ public class TokenController {
 	private void revokeAllClaimsFromUser(String uid) {
 		if (uid != null) {
 			try {	
-				UserRecord user = FirebaseAuth.getInstance().getUser(uid);
 				//Map<String, Object> customClaims = user.getCustomClaims();
 				//customClaims.clear();
 				
 				UpdateRequest request = new UpdateRequest(uid);
 				request.setCustomClaims(null);
-				FirebaseAuth.getInstance().updateUser(request);
+				FirebaseAuth.getInstance().updateUserAsync(request);
 				
-				FirebaseAuth.getInstance().setCustomUserClaims(uid, null);
+				FirebaseAuth.getInstance().setCustomUserClaimsAsync(uid, null);
 				
 			} catch (Exception e) {
 				e.printStackTrace();
