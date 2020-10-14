@@ -13,9 +13,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.api.core.ApiFuture;
-import com.google.api.core.ApiFutureCallback;
-import com.google.api.core.ApiFutures;
 import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.firebase.auth.FirebaseAuth;
@@ -49,7 +46,7 @@ public class TokenController {
 	}
 
 	private void setCustomClaimsByUID(String uid) {
-		CustomClaims customClaims = accessAdministrators.getClaimsForAdministratorByUID(uid);
+		Map<String, Boolean> customClaims = accessAdministrators.getClaimsForAdministratorByUID(uid);
 
 		if (uid != null) {
 			FirebaseAuth.getInstance().setCustomUserClaimsAsync(uid,
@@ -142,7 +139,7 @@ public class TokenController {
 
 	// revoke all claims from users
 	private void revokeAllClaimsFromUser(String uid) {
-		CustomClaims customClaims = new CustomClaims();
+		Map<String, Boolean> customClaims = new HashMap<>();
 		if (uid != null) {
 			try {
 				FirebaseAuth.getInstance().setCustomUserClaimsAsync(uid,
