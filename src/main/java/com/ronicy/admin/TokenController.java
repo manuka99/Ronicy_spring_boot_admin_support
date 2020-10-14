@@ -144,12 +144,11 @@ public class TokenController {
 				customClaims.clear();
 				
 				UpdateRequest request = new UpdateRequest(uid);
-				request.setCustomClaims(customClaims);
+				request.setCustomClaims(null);
 				FirebaseAuth.getInstance().updateUser(request);
 				
-				FirebaseAuth.getInstance().setCustomUserClaimsAsync(uid, customClaims);
+				FirebaseAuth.getInstance().setCustomUserClaims(uid, null);
 				
-				FirebaseAuth.getInstance().revokeRefreshTokens(uid);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
