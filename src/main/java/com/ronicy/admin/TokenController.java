@@ -140,8 +140,8 @@ public class TokenController {
 		if (uid != null) {
 			try {	
 				UserRecord user = FirebaseAuth.getInstance().getUser(uid);
-				Map<String, Object> customClaims = user.getCustomClaims();
-				customClaims.clear();
+				//Map<String, Object> customClaims = user.getCustomClaims();
+				//customClaims.clear();
 				
 				UpdateRequest request = new UpdateRequest(uid);
 				request.setCustomClaims(null);
