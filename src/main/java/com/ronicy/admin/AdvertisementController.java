@@ -1,9 +1,13 @@
 package com.ronicy.admin;
 
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+
+import javax.mail.MessagingException;
+import javax.mail.internet.AddressException;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -136,7 +140,11 @@ public class AdvertisementController {
 			List<String> registrationTokens = getApplicationTokenFromUid(ad.getUserID());
 
 			if (ad.isReviewed() && ad.isApproved()) {
-
+				
+				//send email
+				sendApprovedEmail(ad, user);
+				
+				//send notification
 				Notification notification = Notification.builder().setTitle("Your Advertisement was approved!")
 						.setBody(user.getDisplayName() + ", your advertisement '" + ad.getTitle()
 								+ "' was approved by the ronicy team and it is live now!")
@@ -149,7 +157,12 @@ public class AdvertisementController {
 				sendFCMForAd(notification, message, registrationTokens);
 
 			} else if (ad.isReviewed() && !ad.isApproved()) {
-				Notification notification = Notification.builder().setTitle("Your Advertisement was rejected!")
+				
+				//send email
+				sendRejectedEmail(ad, user);
+				
+				//send notification
+				Notification notification = Notification.builder().setTitle("Your Advertisement need to be edited!")
 						.setBody(user.getDisplayName() + ", your advertisement '" + ad.getTitle()
 								+ "' was rejected by the ronicy team , fix these issues and post again!")
 						.build();
@@ -207,9 +220,19 @@ public class AdvertisementController {
 		return registrationTokens;
 
 	}
-	
-	private void sendEmail() {
-		
+
+	private void sendApprovedEmail(Advertisement ad, UserRecord user){
+		String recipt = user.getEmail();
+		String subject = "Your ad \""+ ad.getTitle()  + "\" is now live on Ronicy.lk";
+		String message = user.getDisplayName() + ", your advertisement was approved and it is now live on Ronicy.lk. Promote your ad for more features.";
+		SimpleEmailSender.sendEmail(recipt, subject, message);
 	}
 
+	private void sendRejectedEmail(Advertisement ad, UserRecord user) {
+		String recipt = user.getEmail();
+		String subject = "Your ad \""+ ad.getTitle()  + "\" needs to be edited";
+		String message = user.getDisplayName() + ", your advertisement was not approved." + "<br><br> Reason: " + ad.getUnapprovedReason() + "<br><br> Edit your ad and post again.";
+		SimpleEmailSender.sendEmail(recipt, subject, message);
+	}
+	
 }
