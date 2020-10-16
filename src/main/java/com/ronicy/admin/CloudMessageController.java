@@ -60,7 +60,11 @@ public class CloudMessageController {
 				map.put(SUBSCRIBED_TOPICS_DATE_NAME, new Date());
 
 				FirestoreClient.getFirestore().collection(COLLECTION).document(token)
-						.update(SUBSCRIBED_TOPICS_ARRAY_NAME, FieldValue.arrayUnion(SUBSCRIBED_TOPICS_PUBLIC));
+				.update(SUBSCRIBED_TOPICS_ARRAY_NAME, FieldValue.arrayUnion(SUBSCRIBED_TOPICS_PUBLIC));
+				
+				if (uid != null) {
+					map.put("uid", uid);
+				}
 
 				FirestoreClient.getFirestore().collection(COLLECTION).document(token).set(map, SetOptions.merge());
 			} else if (!doc.exists()) {

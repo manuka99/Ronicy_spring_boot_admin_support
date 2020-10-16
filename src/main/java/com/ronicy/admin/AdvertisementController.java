@@ -1,5 +1,7 @@
 package com.ronicy.admin;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
@@ -14,6 +16,12 @@ import com.google.cloud.firestore.FirestoreException;
 import com.google.cloud.firestore.QuerySnapshot;
 import com.google.firebase.cloud.FirestoreClient;
 import com.google.firebase.database.annotations.Nullable;
+import com.google.firebase.messaging.BatchResponse;
+import com.google.firebase.messaging.FirebaseMessaging;
+import com.google.firebase.messaging.FirebaseMessagingException;
+import com.google.firebase.messaging.MulticastMessage;
+import com.google.firebase.messaging.Notification;
+import com.google.firebase.messaging.SendResponse;
 import com.ronicy.admin.model.Advertisement;
 
 @RestController
@@ -77,6 +85,77 @@ public class AdvertisementController {
 				});
 
 		return "listening on collection Advertisement";
+	}
+
+	@GetMapping("/advertisement/listen")
+	public String startAdvertisementApproveListener() {
+		FirestoreClient.getFirestore().collection(ADVERTISEMENT)
+				.addSnapshotListener(new EventListener<QuerySnapshot>() {
+					@Override
+					public void onEvent(@Nullable QuerySnapshot snapshots, @Nullable FirestoreException e) {
+						if (e != null) {
+							System.err.println("Listen failed: " + e);
+							return;
+						}
+						for (DocumentChange dc : snapshots.getDocumentChanges()) {
+							Advertisement ad = dc.getDocument().toObject(Advertisement.class);
+							System.out.println("Object ID: " + ad.getObjectID() + " Type: " + dc.getType().name());
+
+							switch (dc.getType()) {
+
+							case ADDED:
+
+								break;
+							case MODIFIED:
+
+								break;
+							case REMOVED:
+
+								break;
+							default:
+								break;
+
+							}
+
+						}
+					}
+				});
+
+		return "listening on collection Advertisement";
+	}
+
+	private void onUpdateAd(Advertisement ad) {
+
+		List<String> registrationTokens = Arrays.asList(
+				"fgiMLjqUQMSMfIcAm2HrPS:APA91bE8AVkdYEYjvFlI_GJgmb185uZgzEWHNX0VobfWXXqtQCiOVlaYpkGs0SIHqYU4F42bI7-mh3ake7e8TrUaIpn0HB1mTN85ayY-VK8XDaeMwNbL6jUt7knmv6cNg6Xp52n5sLul",
+				"dSFNaJA6SM2ypcuTLva-kS:APA91bFeWjlvRzRvhWDNdnZc19yVKPnx5FBXhk0EjZEm9CZoty4PXogAph-fumUHvfs80aI0rAVlxS_Oalm_r-6dP1F9NiBAqMGcgffwoRCNfg7-AXsaPWp3jFeJgImK-sWCYX_on3-t");
+
+		Notification notification = Notification.builder().setTitle("$GOOG up 1.43% on the day")
+				.setBody("$GOOG gained 11.80 points to close at 835.67, up 1.43% on the day.").build();
+
+		MulticastMessage message = MulticastMessage.builder().putData("intent", "dialog").putData("header", "2:45")
+				.putData("body", "2:45").addAllTokens(registrationTokens).setNotification(notification).build();
+
+	}
+
+	public void sendFCMForAd(Notification notification, MulticastMessage message, List<String> registrationTokens)
+			throws FirebaseMessagingException {
+
+		BatchResponse response = FirebaseMessaging.getInstance().sendMulticast(message);
+
+		if (response.getFailureCount() > 0) {
+			List<SendResponse> responses = response.getResponses();
+			List<String> failedTokens = new ArrayList<>();
+			for (int i = 0; i < responses.size(); i++) {
+				if (!responses.get(i).isSuccessful()) {
+					// The order of responses corresponds to the order of the registration tokens.
+					failedTokens.add(registrationTokens.get(i));
+				}
+			}
+
+			System.out.println("List of tokens that caused failures: " + failedTokens);
+		}
+
 	}
 
 }
