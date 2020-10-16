@@ -13,9 +13,9 @@ import javax.mail.internet.MimeMessage;
 
 public interface SimpleEmailSender {
 
-	static final String SENDER_EMAIL = "mykeylogger49@gmail.com";
-	static final String SENDER_NAME = "mykeylogger49@gmail.com";
-	static final String PASSWORD = "manukar2";
+	static final String SENDER_EMAIL = "ronicyteam@gmail.com";
+	static final String SENDER_NAME = "ronicyteam@gmail.com";
+	static final String PASSWORD = "ronicy123";
 	static final String HOST = "smtp.gmail.com";
 	static final String PORT = "587";
 
