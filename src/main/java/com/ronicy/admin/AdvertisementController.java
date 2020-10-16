@@ -138,8 +138,8 @@ public class AdvertisementController {
 			if (ad.isReviewed() && ad.isApproved()) {
 
 				Notification notification = Notification.builder().setTitle("Your Advertisement was approved!")
-						.setBody(user.getDisplayName() + ", your advertisement " + ad.getTitle()
-								+ " was approved by the ronicy team and it is live now!")
+						.setBody(user.getDisplayName() + ", your advertisement '" + ad.getTitle()
+								+ "' was approved by the ronicy team and it is live now!")
 						.build();
 
 				MulticastMessage message = MulticastMessage.builder().putData("intent", "ad")
@@ -150,8 +150,8 @@ public class AdvertisementController {
 
 			} else if (ad.isReviewed() && !ad.isApproved()) {
 				Notification notification = Notification.builder().setTitle("Your Advertisement was rejected!")
-						.setBody(user.getDisplayName() + ", your advertisement " + ad.getTitle()
-								+ " was rejected by the ronicy team , fix these issues and post again!")
+						.setBody(user.getDisplayName() + ", your advertisement '" + ad.getTitle()
+								+ "' was rejected by the ronicy team , fix these issues and post again!")
 						.build();
 
 				MulticastMessage message = MulticastMessage.builder().putData("intent", "my_ads")
