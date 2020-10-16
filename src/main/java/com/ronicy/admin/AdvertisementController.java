@@ -10,10 +10,13 @@ import org.springframework.web.bind.annotation.RestController;
 import com.algolia.search.DefaultSearchClient;
 import com.algolia.search.SearchClient;
 import com.algolia.search.SearchIndex;
+import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.DocumentChange;
 import com.google.cloud.firestore.EventListener;
 import com.google.cloud.firestore.FirestoreException;
 import com.google.cloud.firestore.QuerySnapshot;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.UserRecord;
 import com.google.firebase.cloud.FirestoreClient;
 import com.google.firebase.database.annotations.Nullable;
 import com.google.firebase.messaging.BatchResponse;
@@ -23,6 +26,7 @@ import com.google.firebase.messaging.MulticastMessage;
 import com.google.firebase.messaging.Notification;
 import com.google.firebase.messaging.SendResponse;
 import com.ronicy.admin.model.Advertisement;
+import com.ronicy.admin.model.FCM;
 
 @RestController
 public class AdvertisementController {
@@ -107,7 +111,7 @@ public class AdvertisementController {
 
 								break;
 							case MODIFIED:
-
+								onUpdateAd(ad);
 								break;
 							case REMOVED:
 
@@ -126,15 +130,38 @@ public class AdvertisementController {
 
 	private void onUpdateAd(Advertisement ad) {
 
-		List<String> registrationTokens = Arrays.asList(
-				"fgiMLjqUQMSMfIcAm2HrPS:APA91bE8AVkdYEYjvFlI_GJgmb185uZgzEWHNX0VobfWXXqtQCiOVlaYpkGs0SIHqYU4F42bI7-mh3ake7e8TrUaIpn0HB1mTN85ayY-VK8XDaeMwNbL6jUt7knmv6cNg6Xp52n5sLul",
-				"dSFNaJA6SM2ypcuTLva-kS:APA91bFeWjlvRzRvhWDNdnZc19yVKPnx5FBXhk0EjZEm9CZoty4PXogAph-fumUHvfs80aI0rAVlxS_Oalm_r-6dP1F9NiBAqMGcgffwoRCNfg7-AXsaPWp3jFeJgImK-sWCYX_on3-t");
+		try {
+			UserRecord user = FirebaseAuth.getInstance().getUser(ad.getUserID());
 
-		Notification notification = Notification.builder().setTitle("$GOOG up 1.43% on the day")
-				.setBody("$GOOG gained 11.80 points to close at 835.67, up 1.43% on the day.").build();
+			List<String> registrationTokens = getApplicationTokenFromUid(ad.getUserID());
 
-		MulticastMessage message = MulticastMessage.builder().putData("intent", "dialog").putData("header", "2:45")
-				.putData("body", "2:45").addAllTokens(registrationTokens).setNotification(notification).build();
+			if (ad.isReviewed() && ad.isApproved()) {
+
+				Notification notification = Notification.builder().setTitle("Your Advertisement was approved!")
+						.setBody(user.getDisplayName() + ", your advertisement " + ad.getTitle()
+								+ " was approved by the ronicy team and it is live now!")
+						.build();
+
+				MulticastMessage message = MulticastMessage.builder().putData("intent", "ad")
+						.putData("adCID", ad.getCategoryID()).putData("adID", ad.getId())
+						.addAllTokens(registrationTokens).setNotification(notification).build();
+
+				sendFCMForAd(notification, message, registrationTokens);
+
+			} else if (ad.isReviewed() && !ad.isApproved()) {
+				Notification notification = Notification.builder().setTitle("Your Advertisement was rejected!")
+						.setBody(user.getDisplayName() + ", your advertisement " + ad.getTitle()
+								+ " was rejected by the ronicy team , fix these issues and post again!")
+						.build();
+
+				MulticastMessage message = MulticastMessage.builder().putData("intent", "my_ads")
+						.addAllTokens(registrationTokens).setNotification(notification).build();
+
+				sendFCMForAd(notification, message, registrationTokens);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 
 	}
 
@@ -155,6 +182,29 @@ public class AdvertisementController {
 
 			System.out.println("List of tokens that caused failures: " + failedTokens);
 		}
+
+	}
+
+	private List<String> getApplicationTokenFromUid(String uid) {
+
+		List<String> registrationTokens = new ArrayList<>();
+
+		ApiFuture<QuerySnapshot> query = FirestoreClient.getFirestore().collection(CloudMessageController.COLLECTION)
+				.whereEqualTo("uid", uid).get();
+
+		try {
+			QuerySnapshot snap = query.get();
+			if (snap.size() > 0) {
+				List<FCM> fcmList = snap.toObjects(FCM.class);
+				for (FCM fcm : fcmList) {
+					registrationTokens.add(fcm.getToken());
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return registrationTokens;
 
 	}
 

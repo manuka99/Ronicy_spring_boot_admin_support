@@ -33,7 +33,7 @@ public class CloudMessageController {
 	private static final String SUBSCRIBED_TOPICS_ARRAY_NAME = "subscribedTopics";
 	private static final String SUBSCRIBED_TOPICS_DATE_NAME = "updatedDate";
 	private static final String SUBSCRIBED_TOPICS_UID = "uid";
-	private static final String COLLECTION = "fcm";
+	public static final String COLLECTION = "fcm";
 	private static final String SUBSCRIBED_TOPICS_PUBLIC = "public";
 	private static final String SUBSCRIBED_TOPICS_ADMIN = "admin";
 	private static final String SUBSCRIBED_TOPICS_TOPIC1 = "topic1";
