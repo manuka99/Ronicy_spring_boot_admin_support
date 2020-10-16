@@ -18,9 +18,13 @@ import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.FieldValue;
 import com.google.cloud.firestore.SetOptions;
 import com.google.firebase.cloud.FirestoreClient;
+import com.google.firebase.messaging.BatchResponse;
 import com.google.firebase.messaging.FirebaseMessaging;
+import com.google.firebase.messaging.FirebaseMessagingException;
 import com.google.firebase.messaging.Message;
+import com.google.firebase.messaging.MulticastMessage;
 import com.google.firebase.messaging.Notification;
+import com.google.firebase.messaging.SendResponse;
 import com.ronicy.admin.model.FCM;
 
 @RestController
@@ -38,29 +42,35 @@ public class CloudMessageController {
 	Administrators accessAdministrators = new Administrators();
 
 	@GetMapping("/fcm/save")
-	public void saveAppToken(@RequestParam(value = "token", required = true) String token) {
-		try {	
-			//save in fcm
+	public void saveAppToken(@RequestParam(value = "token", required = true) String token,
+			@RequestParam(value = "uid", required = false) String uid) {
+		try {
+			// save in fcm
 			List<String> users = new ArrayList<String>();
 			users.add(token);
-			
+
 			FirebaseMessaging.getInstance().subscribeToTopic(users, SUBSCRIBED_TOPICS_PUBLIC);
-			
-			//save in database
+
+			// save in database
 			DocumentReference refStore = FirestoreClient.getFirestore().collection(COLLECTION).document(token);
-			DocumentSnapshot doc = refStore.get().get(10, TimeUnit.SECONDS);
-			
+			DocumentSnapshot doc = refStore.get().get(20, TimeUnit.SECONDS);
+
 			if (doc.exists()) {
 				Map<String, Object> map = new HashMap<>();
 				map.put(SUBSCRIBED_TOPICS_DATE_NAME, new Date());
-				
-				FirestoreClient.getFirestore().collection(COLLECTION).document(token).update(SUBSCRIBED_TOPICS_ARRAY_NAME,
-						FieldValue.arrayUnion(SUBSCRIBED_TOPICS_PUBLIC));
-				
-				FirestoreClient.getFirestore().collection(COLLECTION).document(token).set(map,  SetOptions.merge());
-			} else if (!doc.exists()) {
+
 				FirestoreClient.getFirestore().collection(COLLECTION).document(token)
-						.set(new FCM(token, new String[] { SUBSCRIBED_TOPICS_PUBLIC }), SetOptions.merge());
+						.update(SUBSCRIBED_TOPICS_ARRAY_NAME, FieldValue.arrayUnion(SUBSCRIBED_TOPICS_PUBLIC));
+
+				FirestoreClient.getFirestore().collection(COLLECTION).document(token).set(map, SetOptions.merge());
+			} else if (!doc.exists()) {
+				if (uid != null) {
+					FirestoreClient.getFirestore().collection(COLLECTION).document(token)
+							.set(new FCM(token, new String[] { SUBSCRIBED_TOPICS_PUBLIC }), SetOptions.merge());
+				} else {
+					FirestoreClient.getFirestore().collection(COLLECTION).document(token)
+							.set(new FCM(token, new String[] { SUBSCRIBED_TOPICS_PUBLIC }, uid), SetOptions.merge());
+				}
 			}
 		} catch (Exception e) {
 			// TODO: handle exception
@@ -73,14 +83,14 @@ public class CloudMessageController {
 			@RequestParam(value = "uid", required = true) String uid) {
 		try {
 			if (accessAdministrators.validateAdministrators(uid)) {
-				
-				//save in fcm
+
+				// save in fcm
 				List<String> users = new ArrayList<String>();
 				users.add(token);
-				
+
 				FirebaseMessaging.getInstance().subscribeToTopic(users, SUBSCRIBED_TOPICS_ADMIN);
-				
-				//save in database
+
+				// save in database
 				DocumentReference refStore = FirestoreClient.getFirestore().collection(COLLECTION).document(token);
 				DocumentSnapshot doc = refStore.get().get(10, TimeUnit.SECONDS);
 
@@ -88,11 +98,11 @@ public class CloudMessageController {
 					Map<String, Object> map = new HashMap<>();
 					map.put(SUBSCRIBED_TOPICS_DATE_NAME, new Date());
 					map.put(SUBSCRIBED_TOPICS_UID, uid);
-					
+
 					FirestoreClient.getFirestore().collection(COLLECTION).document(token)
 							.update(SUBSCRIBED_TOPICS_ARRAY_NAME, FieldValue.arrayUnion(SUBSCRIBED_TOPICS_ADMIN));
-					
-					FirestoreClient.getFirestore().collection(COLLECTION).document(token).set(map,  SetOptions.merge());				
+
+					FirestoreClient.getFirestore().collection(COLLECTION).document(token).set(map, SetOptions.merge());
 				} else if (!doc.exists()) {
 					FirestoreClient.getFirestore().collection(COLLECTION).document(token)
 							.set(new FCM(token, new String[] { SUBSCRIBED_TOPICS_ADMIN }, uid), SetOptions.merge());
@@ -150,6 +160,35 @@ public class CloudMessageController {
 			// TODO: handle exception
 			e.printStackTrace();
 		}
+	}
+
+	@GetMapping("/fcm/ad")
+	public void sendFCMForAd() throws FirebaseMessagingException {
+		List<String> registrationTokens = Arrays.asList(
+				"fgiMLjqUQMSMfIcAm2HrPS:APA91bE8AVkdYEYjvFlI_GJgmb185uZgzEWHNX0VobfWXXqtQCiOVlaYpkGs0SIHqYU4F42bI7-mh3ake7e8TrUaIpn0HB1mTN85ayY-VK8XDaeMwNbL6jUt7knmv6cNg6Xp52n5sLul",
+				"dSFNaJA6SM2ypcuTLva-kS:APA91bFeWjlvRzRvhWDNdnZc19yVKPnx5FBXhk0EjZEm9CZoty4PXogAph-fumUHvfs80aI0rAVlxS_Oalm_r-6dP1F9NiBAqMGcgffwoRCNfg7-AXsaPWp3jFeJgImK-sWCYX_on3-t");
+
+		Notification notification = Notification.builder().setTitle("$GOOG up 1.43% on the day")
+				.setBody("$GOOG gained 11.80 points to close at 835.67, up 1.43% on the day.").build();
+
+		MulticastMessage message = MulticastMessage.builder().putData("intent", "dialog").putData("header", "2:45")
+				.putData("body", "2:45").addAllTokens(registrationTokens).setNotification(notification).build();
+
+		BatchResponse response = FirebaseMessaging.getInstance().sendMulticast(message);
+
+		if (response.getFailureCount() > 0) {
+			List<SendResponse> responses = response.getResponses();
+			List<String> failedTokens = new ArrayList<>();
+			for (int i = 0; i < responses.size(); i++) {
+				if (!responses.get(i).isSuccessful()) {
+					// The order of responses corresponds to the order of the registration tokens.
+					failedTokens.add(registrationTokens.get(i));
+				}
+			}
+
+			System.out.println("List of tokens that caused failures: " + failedTokens);
+		}
+
 	}
 
 }
