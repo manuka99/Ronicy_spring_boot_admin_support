@@ -26,7 +26,7 @@ public interface SimpleEmailSender {
 		properties.put("mail.smtp.host", HOST);
 		properties.put("mail.smtp.port", PORT);
 		properties.put("mail.smtp.auth", "true");
-		properties.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+		properties.put("mail.smtp.starttls.enable", "true");
 
 		// creates a new session with an authenticator
 		Authenticator auth = new Authenticator() {
