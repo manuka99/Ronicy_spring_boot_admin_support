@@ -17,4 +17,9 @@ public class AppController {
 		return "index";
 	}
 	
+	@GetMapping("/privacy")
+	public String privacy(Model model) {
+		return "privacy";
+	}
+	
 }
